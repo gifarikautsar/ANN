@@ -19,9 +19,15 @@ public class ANNOptions {
     public int weightOpt, topologyOpt, activationFunctionOpt, maxIteration, hiddenLayer;
     public double learningRate, threshold, momentum;
     public List<Integer> layerNeuron;
-    public Instances dataset;
     
     public ANNOptions() {
         layerNeuron = new ArrayList<Integer>();
+        weightOpt = 1;
+        topologyOpt = 3;
+        activationFunctionOpt = 2;
+        maxIteration = 10;
+        
+        learningRate = 0.1;
+        threshold = 0.01;
     }
 }
