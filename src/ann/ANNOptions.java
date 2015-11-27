@@ -23,7 +23,7 @@ public class ANNOptions {
     public ANNOptions() {
         layerNeuron = new ArrayList<Integer>();
         weightOpt = 1;
-        topologyOpt = 3;
+        topologyOpt = 2;
         activationFunctionOpt = 2;
         maxIteration = 10;
         

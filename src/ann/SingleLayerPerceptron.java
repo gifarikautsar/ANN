@@ -138,8 +138,8 @@ public class SingleLayerPerceptron
             }
             for(int i = 0; i < data.numInstances(); i++){
                 // do sum xi.wi (nilai data * bobot)
-                double sum = 0;
                 for(int j = 0; j < output.size(); j++){
+                    double sum = 0;
                     double weight, input;
                     for(int k = 0; k < data.numAttributes(); k++){
                         if(k == data.numAttributes()-1){ // bias
