@@ -27,10 +27,11 @@ public class MultiLayerPerceptron
     // attributes
     private ANNOptions annOptions;
     private List<List<Neuron>> layer;
-    
+    private List<Double> bias;
     public MultiLayerPerceptron(ANNOptions annOptions_) {
         annOptions = annOptions_;
         layer = new ArrayList<List<Neuron>>();
+        bias = new ArrayList<Double>();
     }
     
     @Override
@@ -44,6 +45,7 @@ public class MultiLayerPerceptron
         data = Util.setNominalToBinary(data);
         
         initWeights(data);
+        doPerceptron(data);
     }
 
     @Override
@@ -88,75 +90,135 @@ public class MultiLayerPerceptron
             nOutput = data.numClasses();
         }
         
-        for(int i = 0; i<nOutput; i++){
-            Neuron neuron = new Neuron();
-            // input weight
-            for(int j = 0; j < nAttr-1; j++) {
-                if (annOptions.weightOpt == 1) { // random 
-                    Random random = new Random();
-                    neuron.weights.add(random.nextDouble());
-                } else { // given
-                    System.out.print("Weight input-" + (j+1) + ": ");
-                    neuron.weights.add(sc.nextDouble());
-                }
-            } 
-            System.out.println("Bias: ");
-            neuron.weights.add(sc.nextDouble());
-            layer.add(neuron);
-
-            // weight hidden layer
-            for(int j = 0 ;j<annOptions.hiddenLayer;j++) {
-                neuron = new Neuron();
-                System.out.println("Hidden Layer-" + (j+1));
-                for (int k = 0 ; k < annOptions.layerNeuron.get(j);k++) {
-                    if (annOptions.weightOpt == 1) { // random 
-                        Random random = new Random();
-                        neuron.weights.add(random.nextDouble());
-                    } else { // given
-                        System.out.print("Weight neuron-" + (k+1) + ": ");
-                        neuron.weights.add(sc.nextDouble());
+        for(int i = 0; i<annOptions.hiddenLayer; i++){
+            System.out.println("Layer-" + (i+1));
+            List<Neuron> neuronLayer = new ArrayList<Neuron>();
+            for(int j = 0; j<annOptions.layerNeuron.get(i); j++){
+                System.out.println("Neuron-" + (j+1));
+                Neuron neuron = new Neuron();
+                if(i==0){ // weight from input layer
+                    for(int k = 0; k < nAttr; k++){
+                        if (annOptions.weightOpt == 1) { // random 
+                            Random random = new Random();
+//                            neuron.weights.add(random.nextDouble());
+                            neuron.weights.add(0.0);
+                        } else { // given
+                            if(k < nAttr-1){
+                                System.out.print("Weight input-" + (k+1) + ": ");
+                            }
+                            else{
+                                System.out.print("Weight bias: ");
+                            }
+                            neuron.weights.add(sc.nextDouble());
+                        }
                     }
                 }
-                System.out.println("Bias: ");
-                neuron.weights.add(sc.nextDouble());
-                layer.add(neuron);
-                System.out.println("-----");
+                else{ // weight from hidden layer
+                    for(int k = 0; k < annOptions.layerNeuron.get(i-1)+1; k++){
+                        if (annOptions.weightOpt == 1) { // random 
+                            Random random = new Random();
+//                            neuron.weights.add(random.nextDouble());
+                            neuron.weights.add(0.0);
+                        } else { // given
+                            if(k < annOptions.layerNeuron.get(i-1)){
+                                System.out.print("Weight neuron-" + (k+1) + ": ");
+                            }
+                            else{
+                                System.out.print("Weight bias: ");
+                            }
+                            neuron.weights.add(sc.nextDouble());
+                        }
+                    }
+                }
+                neuronLayer.add(neuron);
             }
+            layer.add(neuronLayer);
+            System.out.println("-------");
         }
         
-        for(int i = 0; i < layer.size(); i++){
-            System.out.println("Layer-" + (i));
-            for (int j=0;j<layer.get(i).weights.size();j++) {
-                System.out.println("Neuron-" + (j+1)+": "+layer.get(i).weights.get(j));
+        //last hidden layer to output
+        List<Neuron> neuronLayer = new ArrayList<Neuron>();
+        for(int i = 0; i < nOutput; i++){
+            System.out.println("Output-" + i);
+            Neuron neuron = new Neuron();
+            for(int j = 0; j < annOptions.layerNeuron.get(annOptions.layerNeuron.size()-1)+1; j++){
+                if (annOptions.weightOpt == 1) { // random 
+                    Random random = new Random();
+//                    neuron.weights.add(random.nextDouble());
+                    neuron.weights.add(0.0);
+                } else { // given
+                    if(j < annOptions.layerNeuron.get(annOptions.layerNeuron.size()-1)){
+                        System.out.print("Weight neuron-" + (j+1) + ": ");
+                    }
+                    else{
+                        System.out.print("Bias: ");
+                    }
+                    neuron.weights.add(sc.nextDouble());
+                }
             }
+            neuronLayer.add(neuron);
         }
+        layer.add(neuronLayer);
+        System.out.println("-------");
+        
+        //print weight
+//        for(int i = 0; i < layer.size(); i++){
+//            System.out.println("Layer-" + (i+1));
+//            for (int j=0;j<layer.get(i).size();j++) {
+//                System.out.println("Neuron-" + (j+1));
+//                for(int k = 0; k < layer.get(i).get(j).weights.size(); k++){
+//                    System.out.println("Weight-" + (k+1) + ": " + layer.get(i).get(j).weights.get(k));
+//                }
+//                System.out.println("-------");
+//            }
+//        }
     }
     
     public void doPerceptron(Instances data) {
         int numAttr = data.numAttributes();
         int numInstances = data.numInstances();
-        for (int epoch = 0 ; epoch <annOptions.maxIteration;epoch++) {
-            for (int i = 0  ; i < numInstances;i++) {
-                // input to layer 1
-                for (int j = 0 ; j < annOptions.layerNeuron.get(0);j++) { // nNeuron in layer 1
-                    double sum = 0;
-                    for (int k = 0 ; k < numAttr;k++) {
-                        double input;
-                        if (k == numAttr-1) {
-                            input = 1;
+        for (int epoch = 0; epoch <annOptions.maxIteration;epoch++) {
+            for (int i = 0; i < numInstances;i++) {
+                for(int j = 0; j < layer.size(); j++){ // Iterasi sebanyak jumlah layer (hidden layer + output layer)
+                    for (int k = 0; k < layer.get(j).size(); k++){ // Iterasi sebanyak jumlah neuron pada layer (udah termasuk bias, bias = neuron terakhir pd layer)
+                        double sum = 0.0;
+                        if(j == 0){ // Untuk hidden layer pertama, value diambil dari input
+                            for(int l = 0; l < numAttr; l++){                                
+                                double input;
+                                if(k == data.numAttributes()-1){ // bias
+                                    input = 1;
+                                }
+                                else{
+                                    input = data.instance(i).value(l);                    
+                                }
+                                double weight = layer.get(j).get(k).weights.get(l);
+                                sum += input * weight;
+                            }
                         }
-                        else {
-                            input = data.instance(i).value(k);
+                        else{ // Untuk hidden layer > 1, Value diambil dari neuron value pada layer sebelumnya
+                            int nPrevLayer = layer.get(j-1).size();
+                            for(int l = 0; l < nPrevLayer; l++){
+                                double input;
+                                if(k == nPrevLayer-1){ // bias
+                                    input = 1;
+                                }
+                                else{
+                                    input = layer.get(j-1).get(l).value;
+                                }
+                                double weight = layer.get(j).get(k).weights.get(l);
+                                sum += input * weight;
+                            }
                         }
-                        double weight = layer.get(1).weights.get(k);
-                        sum+= input * weight;
+                        
+                        if (k < numAttr-1) { // if not bias
+                            System.out.println("Before Layer-" + (j+i) + " neuron-" + (k+1) + ": " + sum);
+                            sum = Util.activationFunction(sum, annOptions);
+                            //sigmoid
+                            layer.get(j).get(k).value = sum;
+                        } 
+                        
+                        System.out.println("After Layer-" + (j+i) + " neuron-" + (k+1) + ": " + layer.get(j).get(k).value);
                     }
-                    layer.get(1).value = sum;
-                }
-                
-                
-                for (int j = 1 ; j < layer.size();j++) {
-                    
                 }
             }
         }

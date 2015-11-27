@@ -49,7 +49,10 @@ public class Util {
             }
             else{ // Sigmoid
                 activateValue = 1/(1+exp(-output));
-            }
+            }   
+        }
+        if(annOptions.topologyOpt == 4){
+            activateValue = 1/(1+exp(-output));
         }
         return activateValue;
     }
