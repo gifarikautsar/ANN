@@ -14,6 +14,7 @@ import java.util.List;
  */
 public class Neuron {
     public List<Double> weights;
+    public double value;
     
     public Neuron(){
         weights = new ArrayList<Double>();

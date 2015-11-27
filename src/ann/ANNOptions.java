@@ -22,9 +22,12 @@ public class ANNOptions {
     
     public ANNOptions() {
         layerNeuron = new ArrayList<Integer>();
-        weightOpt = 1;
-        topologyOpt = 2;
+        weightOpt = 2;
+        topologyOpt = 4;
         activationFunctionOpt = 2;
+        hiddenLayer = 2;
+        layerNeuron.add(2);
+        layerNeuron.add(3);
         maxIteration = 10;
         
         learningRate = 0.1;

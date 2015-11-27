@@ -7,9 +7,7 @@ import java.util.Random;
 import java.util.Scanner;
 import weka.classifiers.Classifier;
 import weka.classifiers.Sourcable;
-import weka.core.Attribute;
 import weka.core.Capabilities;
-import weka.core.Instance;
 import weka.core.Instances;
 import weka.core.TechnicalInformation;
 import weka.core.TechnicalInformationHandler;
@@ -32,10 +30,7 @@ public class SingleLayerPerceptron
     
     
     // Attributes
-    private Attribute attribute;
-    private double classValue;
     private ANNOptions annOptions;
-    private double[][] weights;
     private List<Neuron> output;
     
     // constructor
@@ -85,6 +80,7 @@ public class SingleLayerPerceptron
 //        }
     }
     
+    @Override
     public Capabilities getCapabilities() {
         Capabilities result = super.getCapabilities();
         result.disableAll();
@@ -111,7 +107,7 @@ public class SingleLayerPerceptron
         // remove instances with missing class
         data = new Instances(data);
         data.deleteWithMissingClass();
-        data = setNominalToBinary(data);
+        data = Util.setNominalToBinary(data);
         
         initWeights(data);
         // do main function
@@ -164,7 +160,7 @@ public class SingleLayerPerceptron
                         }
 
                         // lewati fungsi aktivasi
-                        double newOutput = activationFunction(sum);
+                        double newOutput = Util.activationFunction(sum,annOptions);
                         double target;
                         if(data.numClasses() > 2){
                             if(data.instance(i).classValue() == j){
@@ -228,7 +224,7 @@ public class SingleLayerPerceptron
                         sum += weight * input;
                     }
                     // lewati fungsi aktivasi
-                    sum = activationFunction(sum);
+                    sum = Util.activationFunction(sum,annOptions);
                     double target;
                     if(data.numClasses() > 2){
                         if(data.instance(i).classValue() == j){
@@ -261,44 +257,5 @@ public class SingleLayerPerceptron
         for(int i = 0; i < output.size(); i++){
             System.out.println(output.get(i).weights.toString());
         }
-    }
-    
-    public double activationFunction(double output){
-        double activateValue = output;
-        if(annOptions.topologyOpt == 1){ // Perceptron Training Rule
-            if(annOptions.activationFunctionOpt == 1){ // Step
-                if(output < 0){
-                    activateValue = 0;
-                }
-                else{
-                    activateValue = 1;
-                }
-            }
-            else if(annOptions.activationFunctionOpt == 2){ // Sign
-                if(output < 0){
-                    activateValue = -1;
-                }
-                else{
-                    activateValue = 1;
-                }
-            }
-            else{ // Sigmoid
-                activateValue = 1/(1+exp(-output));
-            }
-        }
-        return activateValue;
-    }
-    
-    public Instances setNominalToBinary(Instances instances) {
-        NominalToBinary ntb = new NominalToBinary();
-        Instances newInstances = null;
-        try {
-            ntb.setInputFormat(instances);
-            newInstances = new Instances(Filter.useFilter(instances, ntb));
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        
-        return newInstances;
     }
 }
