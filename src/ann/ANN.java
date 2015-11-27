@@ -90,14 +90,19 @@ public class ANN {
                 
         if(annOptions.topologyOpt < 4){ // Perceptron Training Rule
             try {
-                SingleLayerPerceptron perceptronTrainingRule  = new SingleLayerPerceptron(annOptions);
-                perceptronTrainingRule.buildClassifier(data);
+                SingleLayerPerceptron singleLayerPerceptron  = new SingleLayerPerceptron(annOptions);
+                singleLayerPerceptron.buildClassifier(data);
             } catch (Exception ex) {
                 Logger.getLogger(ANN.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
-        else{ // Multi Layer Perceptron
-            
+        else if (annOptions.topologyOpt == 4){ // Multi Layer Perceptron
+            try {
+                MultiLayerPerceptron multiLayerPerceptron = new MultiLayerPerceptron(annOptions);
+                multiLayerPerceptron.buildClassifier(data);
+            } catch (Exception ex) {
+                Logger.getLogger(ANN.class.getName()).log(Level.SEVERE, null, ex);
+            }
         }
     }
     
