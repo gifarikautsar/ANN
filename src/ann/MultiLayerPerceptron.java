@@ -220,7 +220,47 @@ public class MultiLayerPerceptron
                         System.out.println("After Layer-" + (j+i) + " neuron-" + (k+1) + ": " + layer.get(j).get(k).value);
                     }
                 }
+                
+                // let's calculate error guys
+                // for output, madam
+                int nOutputNeuron = layer.get(layer.size()-1).size();
+                for (int x = 0; x< nOutputNeuron;x++) {
+                    double output = layer.get(layer.size()-1).get(x).value;
+                    double target = data.instance(i).classValue();
+                    if(data.numClasses() > 2){
+                        if(target == x){
+                            target = 1;
+                        }
+                        else{
+                            target = 0;
+                        }
+                    }
+                    layer.get(layer.size()-1).get(x).error = calculateError(output,target);
+                }
+                
+                for (int x = annOptions.hiddenLayer-1 ; x >= 0;x--) { // for each hidden layer
+                    for (int y = 0; y<annOptions.layerNeuron.get(x);y++) { // for each neuron in hidden layer
+                        double error = 0;
+                    
+                        for (int z = 0 ; z < layer.get(x+1).size();z++) { // for each neuron in next layer
+                            double nextError = layer.get(x+1).get(z).error;
+                            double weight = layer.get(x+1).get(z).weights.get(y);
+                            error *= weight * nextError;
+                        }
+                        
+                        double output = layer.get(x).get(y).value;
+                        error *=  output * (1-output);
+                    }
+                }
             }
         }
+    }
+    
+    public double calculateError(double output, double target){
+        return (output *(1-output) *(target-output));
+    }
+    
+    public double calculateError(double output, double errorAfter, double weight) {
+        return (output * (1 - output) * errorAfter * weight);
     }
 }
