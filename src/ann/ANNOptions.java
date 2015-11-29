@@ -24,17 +24,12 @@ public class ANNOptions {
         layerNeuron = new ArrayList<Integer>();
         weightOpt = 1;
         topologyOpt = 4;
-        activationFunctionOpt = 3;
-        hiddenLayer = 6;
+        activationFunctionOpt = 1;
+        hiddenLayer = 1;
         layerNeuron.add(2);
-        layerNeuron.add(3);
-        layerNeuron.add(3);
-        layerNeuron.add(3);
-        layerNeuron.add(3);
-        layerNeuron.add(3);
-        maxIteration = 10;
-        momentum = 0;
-        learningRate = 0.1;
-        threshold = 0.01;
+        maxIteration = 500;
+        momentum = 0.2;
+        learningRate = 0.3;
+        threshold = 0.2;
     }
 }

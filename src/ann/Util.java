@@ -6,9 +6,11 @@
 package ann;
 
 import static java.lang.Math.exp;
+import weka.core.Instance;
 import weka.core.Instances;
 import weka.filters.Filter;
 import weka.filters.supervised.attribute.NominalToBinary;
+import weka.filters.unsupervised.attribute.Normalize;
 
 /**
  *
@@ -21,6 +23,19 @@ public class Util {
         try {
             ntb.setInputFormat(instances);
             newInstances = new Instances(Filter.useFilter(instances, ntb));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        
+        return newInstances;
+    }
+    
+    public static Instances setNormalize(Instances instances){
+        Normalize normal = new Normalize();
+        Instances newInstances = null;
+        try {
+            normal.setInputFormat(instances);
+            newInstances = new Instances(Filter.useFilter(instances, normal));
         } catch (Exception e) {
             e.printStackTrace();
         }

@@ -8,11 +8,14 @@ import java.util.Scanner;
 import weka.classifiers.Classifier;
 import weka.classifiers.Sourcable;
 import weka.core.Capabilities;
+import weka.core.Instance;
 import weka.core.Instances;
+import weka.core.NoSupportForMissingValuesException;
 import weka.core.TechnicalInformation;
 import weka.core.TechnicalInformationHandler;
 import weka.filters.Filter;
 import weka.filters.supervised.attribute.NominalToBinary;
+import weka.filters.unsupervised.attribute.Normalize;
 
 /*
  * To change this license header, choose License Headers in Project Properties.
@@ -42,9 +45,8 @@ public class SingleLayerPerceptron
     public void initWeights(Instances data){
         int nAttr = data.numAttributes();
         Scanner sc = new Scanner(System.in);
-        System.out.println(data.numAttributes());
         int nOutput;
-        if(data.numClasses()<=2){
+        if(data.numClasses()<=2 && annOptions.topologyOpt == 1){
             nOutput = 1;
         }
         else{
@@ -56,8 +58,8 @@ public class SingleLayerPerceptron
             if(annOptions.weightOpt == 1){ // Random
                 for(int i = 0; i < nAttr; i++) {
                     Random random = new Random();
-//                    temp.weights.add(random.nextDouble());
-                    temp.weights.add(0.0);
+                    temp.weights.add(random.nextDouble());
+//                    temp.weights.add(0.0);
                 } 
             }
             else{ // Given
@@ -108,10 +110,11 @@ public class SingleLayerPerceptron
         data = new Instances(data);
         data.deleteWithMissingClass();
         data = Util.setNominalToBinary(data);
-        
+        data = Util.setNormalize(data);
         initWeights(data);
         // do main function
         doPerceptron(data);
+        
     }
 
     @Override
@@ -162,7 +165,7 @@ public class SingleLayerPerceptron
                         // lewati fungsi aktivasi
                         double newOutput = Util.activationFunction(sum,annOptions);
                         double target;
-                        if(data.numClasses() > 2){
+                        if(output.size() > 1){
                             if(data.instance(i).classValue() == j){
                                 target = 1;
                             }
@@ -172,9 +175,6 @@ public class SingleLayerPerceptron
                         }
                         else{
                             target = data.instance(i).classValue();
-                            if(target == 0){
-                                target = -1;
-                            }
                         }
                         weight = output.get(j).weights.get(k);
 
@@ -226,7 +226,7 @@ public class SingleLayerPerceptron
                     // lewati fungsi aktivasi
                     sum = Util.activationFunction(sum,annOptions);
                     double target;
-                    if(data.numClasses() > 2){
+                    if(output.size() > 1){
                         if(data.instance(i).classValue() == j){
                             target = 1;
                         }
@@ -236,26 +236,69 @@ public class SingleLayerPerceptron
                     }
                     else{
                         target = data.instance(i).classValue();
-                        if(target == 0){
-                            target = -1;
-                        }
                     }
                     double error = target - sum;
                     errorEpoch += error * error;
                 }
             }
-            
-            
             errorEpoch *= 0.5; 
-            System.out.println((epoch+1) + " : " + errorEpoch);
+//            System.out.println((epoch+1) + " : " + errorEpoch);
             // Convergent
             if(errorEpoch <= annOptions.threshold){
                 break;
             }
         }
         System.out.println("DONE :)");
-        for(int i = 0; i < output.size(); i++){
-            System.out.println(output.get(i).weights.toString());
+//        for(int i = 0; i < output.size(); i++){
+//            System.out.println("---");
+//            for(int j = 0; j < output.get(i).weights.size(); j++){
+//                System.out.println(output.get(i).weights.get(j));
+//            }
+//        }
+    }
+    
+    public int[] classifyInstances(Instances data){
+        int[] classValue = new int[data.numInstances()];
+        data = Util.setNominalToBinary(data);
+        data = Util.setNormalize(data);
+        int right = 0;
+        
+        
+        for(int i = 0; i < data.numInstances(); i++){
+            int outputSize =output.size();
+            double[] result = new double[outputSize];
+            for(int j = 0; j < outputSize; j++){
+                result[j] = 0.0;
+                for(int k = 0; k < data.numAttributes(); k++){
+                    double input = 1;
+                    if(k < data.numAttributes()-1){
+                        input = output.get(j).weights.get(k);
+                    }
+                    result[j] += output.get(j).weights.get(k) * data.instance(i).value(k);
+                }
+                result[j] = Util.activationFunction(result[j], annOptions);
+            }
+
+            if(outputSize >= 2){
+                for(int j = 0; j < outputSize; j++){
+                    if(result[j] > result[classValue[i]]){
+                        classValue[i]  = j;
+                    }
+                }
+            }
+            else{
+                classValue[i] = (int)result[0];
+            }
+            double target = data.instance(i).classValue();
+            double output = classValue[i];
+            System.out.println("Intance-" + i + " target: " + target + " output: " + output);
+            if(target == output){
+                right = right + 1;
+            }
         }
+        
+        System.out.println("Percentage: " + ((double)right/(double)data.numInstances()));
+        
+        return classValue;
     }
 }
