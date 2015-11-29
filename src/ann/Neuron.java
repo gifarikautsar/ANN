@@ -16,8 +16,10 @@ public class Neuron {
     public List<Double> weights; // all previous weight
     public double error; // next error
     public double value;
+    public List<Double> lastDeltaWeight;
     
     public Neuron(){
         weights = new ArrayList<Double>();
+        lastDeltaWeight = new ArrayList<Double>();
     }
 }

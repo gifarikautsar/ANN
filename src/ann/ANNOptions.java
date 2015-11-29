@@ -28,8 +28,8 @@ public class ANNOptions {
         hiddenLayer = 2;
         layerNeuron.add(2);
         layerNeuron.add(3);
-        maxIteration = 1;
-        
+        maxIteration = 10;
+        momentum = 0;
         learningRate = 0.1;
         threshold = 0.01;
     }
