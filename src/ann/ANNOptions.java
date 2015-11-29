@@ -25,8 +25,12 @@ public class ANNOptions {
         weightOpt = 1;
         topologyOpt = 4;
         activationFunctionOpt = 3;
-        hiddenLayer = 2;
+        hiddenLayer = 6;
         layerNeuron.add(2);
+        layerNeuron.add(3);
+        layerNeuron.add(3);
+        layerNeuron.add(3);
+        layerNeuron.add(3);
         layerNeuron.add(3);
         maxIteration = 10;
         momentum = 0;
