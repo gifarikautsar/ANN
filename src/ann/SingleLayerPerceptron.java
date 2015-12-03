@@ -1,5 +1,6 @@
 package ann;
 
+import java.io.Serializable;
 import static java.lang.Math.exp;
 import java.util.ArrayList;
 import java.util.List;
@@ -29,58 +30,16 @@ import weka.filters.unsupervised.attribute.Normalize;
  */
 public class SingleLayerPerceptron 
     extends Classifier 
-    implements TechnicalInformationHandler, Sourcable {
+    implements TechnicalInformationHandler, Sourcable, Serializable {
     
     
     // Attributes
     private ANNOptions annOptions;
     private List<Neuron> output;
+    private Normalize normalize;
+    private NominalToBinary ntb;
     
     // constructor
-    public SingleLayerPerceptron(ANNOptions annOptions_) throws Exception{
-        annOptions = annOptions_;
-        output = new ArrayList<Neuron>();
-    }
-    
-    public void initWeights(Instances data){
-        int nAttr = data.numAttributes();
-        Scanner sc = new Scanner(System.in);
-        int nOutput;
-        if(data.numClasses()<=2 && annOptions.topologyOpt == 1){
-            nOutput = 1;
-        }
-        else{
-            nOutput = data.numClasses();
-        }
-        
-        for(int j = 0; j<nOutput; j++){
-            Neuron temp = new Neuron();
-            if(annOptions.weightOpt == 1){ // Random
-                for(int i = 0; i < nAttr; i++) {
-                    Random random = new Random();
-                    temp.weights.add(random.nextDouble());
-//                    temp.weights.add(0.0);
-                } 
-            }
-            else{ // Given
-                System.out.println("Output-" + j);
-                for(int i = 0; i < nAttr-1; i++) {
-                    System.out.print("Weight-" + (i+1) + ": ");
-                    temp.weights.add(sc.nextDouble());
-                }
-                System.out.print("Bias weight: ");
-                temp.weights.add(sc.nextDouble());
-            }
-            
-            output.add(temp);
-        }
-        
-//        for(int j = 0; j < nOutput; j++){
-//            for(int i = 0; i < nAttr; i++) {
-//                System.out.println(output.get(j).weights.get(i));
-//            } 
-//        }
-    }
     
     @Override
     public Capabilities getCapabilities() {
@@ -105,18 +64,37 @@ public class SingleLayerPerceptron
     public void buildClassifier(Instances data) throws Exception {
         // can classifier handle the data?
         getCapabilities().testWithFail(data);
-
+        annOptions = new ANNOptions();
+        annOptions = annOptions.loadConfiguration();
+        output = new ArrayList<Neuron>();
+        normalize = new Normalize();
+        ntb = new NominalToBinary();
+        output = annOptions.output;
+        
         // remove instances with missing class
         data = new Instances(data);
         data.deleteWithMissingClass();
-        data = Util.setNominalToBinary(data);
-        data = Util.setNormalize(data);
-        initWeights(data);
-        // do main function
-        doPerceptron(data);
         
+        //nominal to binary filter
+        ntb.setInputFormat(data);
+        data = new Instances(Filter.useFilter(data, ntb));
+        
+        //normalize filter
+        normalize.setInputFormat(data);
+        data = new Instances(Filter.useFilter(data, normalize));
+        
+        // do main function
+        doPerceptron(data);        
     }
 
+    public void printWeight(){
+        for(int i = 0; i < output.size(); i++){
+            System.out.println("Output-" + i);
+            for(int j = 0; j < output.get(i).weights.size(); j++){
+                System.out.println("Neuron-" + j + ": " + output.get(i).weights.get(j));
+            }
+        }
+    }
     @Override
     public TechnicalInformation getTechnicalInformation() {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
@@ -148,8 +126,6 @@ public class SingleLayerPerceptron
                             input = data.instance(i).value(k);                    
                         }
                         weight = output.get(j).weights.get(k);
-    //                    System.out.println("Weight: " + weight);
-    //                    System.out.println("Input: " + input);
                         sum += weight * input;
                     }
 
@@ -182,25 +158,14 @@ public class SingleLayerPerceptron
                         if (annOptions.topologyOpt == 2) // batch
                         {
                             deltaWeightUpdate[k] += (target - newOutput) * input;
-//                            System.out.println("deltaWeight: " + ((target - newOutput) * input));
                             if (i == data.numInstances()-1) { // update weight
                                 output.get(j).weights.set(k, annOptions.learningRate*(weight+deltaWeightUpdate[k]));
-                                System.out.println("weight: " + (annOptions.learningRate*(weight+deltaWeightUpdate[k])));
                             }
                         }
                         else {
                             deltaWeight = annOptions.learningRate * (target - newOutput) * input;
                             output.get(j).weights.set(k, weight+deltaWeight);
                         }
-                            
-//                        System.out.println("---");
-//                        System.out.println("target: " + target);
-//                        System.out.println("newOutput: " + newOutput);
-
-                        // hitung bobot baru (bobot awal + delta bobot)
-//                        System.out.println("Instance-" + (i+1) +" : " + output.get(j).weights.get(k));
-    //                    System.out.println("Delta: " + deltaWeight);
-    //                    System.out.println("-----");
                     }
                 }   
             }
@@ -219,8 +184,6 @@ public class SingleLayerPerceptron
                             input = data.instance(i).value(k);                    
                         }
                         double weight = output.get(j).weights.get(k);
-    //                    System.out.println("Weight: " + weight);
-    //                    System.out.println("Input: " + input);
                         sum += weight * input;
                     }
                     // lewati fungsi aktivasi
@@ -242,25 +205,22 @@ public class SingleLayerPerceptron
                 }
             }
             errorEpoch *= 0.5; 
-//            System.out.println((epoch+1) + " : " + errorEpoch);
             // Convergent
             if(errorEpoch <= annOptions.threshold){
                 break;
             }
         }
-        System.out.println("DONE :)");
-//        for(int i = 0; i < output.size(); i++){
-//            System.out.println("---");
-//            for(int j = 0; j < output.get(i).weights.size(); j++){
-//                System.out.println(output.get(i).weights.get(j));
-//            }
-//        }
     }
     
-    public int[] classifyInstances(Instances data){
+    public int[] classifyInstances(Instances data) throws Exception{
         int[] classValue = new int[data.numInstances()];
-        data = Util.setNominalToBinary(data);
-        data = Util.setNormalize(data);
+        // remove instances with missing class
+        data = new Instances(data);
+        data.deleteWithMissingClass();
+        
+        //nominal to binary filter
+        ntb.setInputFormat(data);
+        data = new Instances(Filter.useFilter(data, ntb));
         int right = 0;
         
         
@@ -272,9 +232,9 @@ public class SingleLayerPerceptron
                 for(int k = 0; k < data.numAttributes(); k++){
                     double input = 1;
                     if(k < data.numAttributes()-1){
-                        input = output.get(j).weights.get(k);
+                        input = data.instance(i).value(k);
                     }
-                    result[j] += output.get(j).weights.get(k) * data.instance(i).value(k);
+                    result[j] += output.get(j).weights.get(k) * input;
                 }
                 result[j] = Util.activationFunction(result[j], annOptions);
             }
@@ -301,4 +261,44 @@ public class SingleLayerPerceptron
         
         return classValue;
     }
+    
+    public double classifyInstance(Instance inst) throws Exception{
+        double instanceClass = 0.0;
+        
+        ntb.input(inst);
+        inst = ntb.output();
+        normalize.input(inst);
+        inst = normalize.output();
+        System.out.println(inst.toString());
+        int outputSize =output.size();
+        double[] result = new double[outputSize];
+        for(int j = 0; j < outputSize; j++){
+            result[j] = 0.0;
+            for(int k = 0; k < inst.numAttributes(); k++){
+                double input = 1;
+                if(k < inst.numAttributes()-1){
+                    input = inst.value(k);
+                }
+                System.out.println(output.get(j).weights.get(k) + "*" + input);
+                result[j] += output.get(j).weights.get(k) * input;
+            }
+            result[j] = Util.activationFunction(result[j], annOptions);
+        }
+
+        if(outputSize >= 2){
+            for(int j = 0; j < outputSize; j++){
+                System.out.print(result[j] + "-");
+                if(result[j] > result[(int)instanceClass]){
+                    
+                    instanceClass  = j;
+                    System.out.println(instanceClass);
+                }
+            }
+        }
+        else{
+            instanceClass = (int)result[0];
+        }
+        
+        return instanceClass;
+    } 
 }

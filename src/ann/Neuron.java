@@ -5,6 +5,7 @@
  */
 package ann;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -12,7 +13,7 @@ import java.util.List;
  *
  * @author gifarikautsar
  */
-public class Neuron {
+public class Neuron implements Serializable{
     public List<Double> weights; // all previous weight
     public double error; // next error
     public double value;

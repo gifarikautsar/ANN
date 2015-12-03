@@ -5,9 +5,12 @@
  */
 package ann;
 
+import java.io.Serializable;
 import static java.lang.Math.exp;
+import weka.classifiers.Classifier;
 import weka.core.Instance;
 import weka.core.Instances;
+import weka.core.SerializationHelper;
 import weka.filters.Filter;
 import weka.filters.supervised.attribute.NominalToBinary;
 import weka.filters.unsupervised.attribute.Normalize;
@@ -16,33 +19,7 @@ import weka.filters.unsupervised.attribute.Normalize;
  *
  * @author Tony
  */
-public class Util {
-    public static Instances setNominalToBinary(Instances instances) {
-        NominalToBinary ntb = new NominalToBinary();
-        Instances newInstances = null;
-        try {
-            ntb.setInputFormat(instances);
-            newInstances = new Instances(Filter.useFilter(instances, ntb));
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        
-        return newInstances;
-    }
-    
-    public static Instances setNormalize(Instances instances){
-        Normalize normal = new Normalize();
-        Instances newInstances = null;
-        try {
-            normal.setInputFormat(instances);
-            newInstances = new Instances(Filter.useFilter(instances, normal));
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        
-        return newInstances;
-    }
-    
+public class Util implements Serializable {  
     public static double activationFunction(double output, ANNOptions annOptions){
         double activateValue = output;
         if(annOptions.topologyOpt == 1){ // Perceptron Training Rule
